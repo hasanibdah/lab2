@@ -2,6 +2,9 @@ public class User {
 
     private String username;
     private String password;
+    private int failedAttempts = 0;
+    private boolean blocked = false;
+    private long blockStartTime = 0;
 
     private void checkUsername(String username) throws Exception {
         if (username.length() > 50) {
@@ -117,6 +120,34 @@ public class User {
 
     public String getPassword() {
         return password;
+    }
+
+    public synchronized void increaseFailedAttempts() {
+        failedAttempts++;
+    }
+
+    public synchronized int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public synchronized void resetFailedAttempts() {
+        failedAttempts = 0;
+    }
+
+    public synchronized boolean isBlocked() {
+        return blocked;
+    }
+
+    public synchronized void setBlocked(boolean blocked) {
+        this.blocked = blocked;
+    }
+
+    public synchronized long getBlockStartTime() {
+        return blockStartTime;
+    }
+
+    public synchronized void setBlockStartTime(long blockStartTime) {
+        this.blockStartTime = blockStartTime;
     }
 
     @Override

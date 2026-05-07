@@ -80,30 +80,72 @@ public class LoginController {
         String username = usernameField.getText();
         String password = passwordField.getText();
 
-        // Check credentials against valid users
         for (User u : users) {
-            if (u.getUsername().equals(username) &&
-                    u.getPassword().equals(password)) {
 
-                try {
-                    // Load next screen (welcome.fxml)
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/welcome.fxml"));
-                    Scene scene = new Scene(loader.load());
+            if (u.getUsername().equals(username)) {
 
-                    // Get current window and replace scene
-                    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                    stage.setScene(scene);
-                    stage.show();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (u.isBlocked()) {
+                    errorLabel.setText("User is blocked");
+                    return;
                 }
 
-                return; // Stop after successful login
+                if (u.getPassword().equals(password)) {
+                    // Reset failed attempts after successful login
+                    u.resetFailedAttempts();
+                    try {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/welcome.fxml"));
+                        Scene scene = new Scene(loader.load());
+
+                        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                        stage.setScene(scene);
+                        stage.show();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    return;
+                } else {
+                    Thread t = new Thread(() -> {
+                        u.increaseFailedAttempts();
+                        // Check if the user reached the maximum allowed failed login attempts
+                        if (u.getFailedAttempts() >= HelloApplication.maxAttempts) {
+
+                            u.setBlocked(true);
+                            // Save the time when the block started
+                            u.setBlockStartTime(System.currentTimeMillis());
+
+                            System.out.println(u.getUsername() + " is blocked");
+                            // Create a new thread responsible for removing the block
+                            Thread unblockThread = new Thread(() -> {
+
+                                try {
+
+                                    Thread.sleep(HelloApplication.blockTime * 1000L);
+                                    // Unblock the user after the waiting time
+                                    u.setBlocked(false);
+                                    // Reset failed login attempts counter
+                                    u.resetFailedAttempts();
+
+                                    System.out.println(u.getUsername() + " is unblocked");
+
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            });
+
+                            unblockThread.start();
+                        }
+                    });
+
+                    t.start();
+
+                    errorLabel.setText("Wrong password");
+                    return;
+                }
             }
         }
 
-        // If no match found
-        errorLabel.setText("user or password do not match");
+        errorLabel.setText("User not found");
     }
 }

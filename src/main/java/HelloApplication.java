@@ -4,6 +4,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class HelloApplication extends Application {
+    public static int maxAttempts;
+    public static int blockTime;
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -15,6 +17,8 @@ public class HelloApplication extends Application {
     }
 
     public static void main(String[] args) {
+        maxAttempts = 3;
+        blockTime = 10;
         launch(args);
     }
 }
